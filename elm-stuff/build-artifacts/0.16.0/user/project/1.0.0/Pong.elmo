@@ -5,14 +5,139 @@ Elm.Pong.make = function (_elm) {
    if (_elm.Pong.values) return _elm.Pong.values;
    var _U = Elm.Native.Utils.make(_elm),
    $Basics = Elm.Basics.make(_elm),
+   $Color = Elm.Color.make(_elm),
    $Debug = Elm.Debug.make(_elm),
+   $Graphics$Collage = Elm.Graphics.Collage.make(_elm),
+   $Graphics$Element = Elm.Graphics.Element.make(_elm),
+   $Keyboard = Elm.Keyboard.make(_elm),
    $List = Elm.List.make(_elm),
    $Maybe = Elm.Maybe.make(_elm),
    $Result = Elm.Result.make(_elm),
    $Signal = Elm.Signal.make(_elm),
-   $Time = Elm.Time.make(_elm);
+   $Text = Elm.Text.make(_elm),
+   $Time = Elm.Time.make(_elm),
+   $Window = Elm.Window.make(_elm);
    var _op = {};
+   var displayObj = F2(function (obj,shape) {
+      return A2($Graphics$Collage.move,{ctor: "_Tuple2",_0: obj.x,_1: obj.y},A2($Graphics$Collage.filled,$Color.white,shape));
+   });
+   var msg = "SPACE to start, WS and &uarr;&darr; to move";
+   var textGreen = A3($Color.rgb,160,200,160);
+   var txt = function (f) {
+      return function (_p0) {
+         return $Graphics$Element.leftAligned(f($Text.monospace(A2($Text.color,textGreen,$Text.fromString(_p0)))));
+      };
+   };
+   var pongGreen = A3($Color.rgb,60,100,60);
+   var stepObj = F2(function (t,_p1) {    var _p2 = _p1;return _U.update(_p2,{x: _p2.x + _p2.vx * t,y: _p2.y + _p2.vy * t});});
+   var stepV = F3(function (v,lowerCollision,upperCollision) {    return lowerCollision ? $Basics.abs(v) : upperCollision ? 0 - $Basics.abs(v) : v;});
+   var near = F3(function (object1,distance,object2) {    return _U.cmp(object2,object1 - distance) > -1 && _U.cmp(object2,object1 + distance) < 1;});
+   var within = F2(function (ball,player) {    return A3(near,player.x,8,ball.x) && A3(near,player.y,20,ball.y);});
+   var player = function (x) {    return {x: x,y: 0,vy: 0,vx: 0,score: 0};};
+   var Game = F4(function (a,b,c,d) {    return {state: a,ball: b,player1: c,player2: d};});
+   var Pause = {ctor: "Pause"};
+   var Play = {ctor: "Play"};
+   var _p3 = {ctor: "_Tuple2",_0: 300,_1: 200};
+   var halfWidth = _p3._0;
+   var halfHeight = _p3._1;
+   var defaultGame = {state: Pause,ball: {x: 0,y: 0,vy: 200,vx: 200},player1: player(10 - halfWidth),player2: player(halfWidth - 10)};
+   var stepBall = F4(function (time,_p4,player1,player2) {
+      var _p5 = _p4;
+      var _p7 = _p5.y;
+      var _p6 = _p5;
+      return $Basics.not(A3(near,0,halfWidth,_p6.x)) ? _U.update(_p6,{x: 0,y: 0}) : A2(stepObj,
+      time,
+      _U.update(_p6,
+      {vx: A3(stepV,_p5.vx,A2(within,_p6,player1),A2(within,_p6,player2)),vy: A3(stepV,_p5.vy,_U.cmp(_p7,7 - halfHeight) < 0,_U.cmp(_p7,halfHeight - 7) > 0)}));
+   });
+   var stepPlyr = F4(function (time,direction,points,player) {
+      var score$ = player.score + points;
+      var player$ = A2(stepObj,time,_U.update(player,{vy: $Basics.toFloat(direction) * 300}));
+      var y$ = A3($Basics.clamp,22 - halfHeight,halfHeight - 22,player$.y);
+      return _U.update(player$,{y: y$,score: score$});
+   });
+   var stepGame = F2(function (input,game) {
+      var _p8 = game;
+      var state = _p8.state;
+      var ball = _p8.ball;
+      var player1 = _p8.player1;
+      var player2 = _p8.player2;
+      var score1 = _U.cmp(ball.x,halfWidth) > 0 ? 1 : 0;
+      var score2 = _U.cmp(ball.x,0 - halfWidth) < 0 ? 1 : 0;
+      var _p9 = input;
+      var space = _p9.space;
+      var paddle1 = _p9.paddle1;
+      var paddle2 = _p9.paddle2;
+      var delta = _p9.delta;
+      var state$ = space ? Play : !_U.eq(score1,score2) ? Pause : state;
+      var ball$ = _U.eq(state,Pause) ? ball : A4(stepBall,delta,ball,player1,player2);
+      var player1$ = A4(stepPlyr,delta,paddle1,score1,player1);
+      var player2$ = A4(stepPlyr,delta,paddle2,score2,player2);
+      return _U.update(game,{state: state$,ball: ball$,player1: player1$,player2: player2$});
+   });
+   var _p10 = {ctor: "_Tuple2",_0: 600,_1: 400};
+   var gameWidth = _p10._0;
+   var gameHeight = _p10._1;
+   var display = F2(function (_p12,_p11) {
+      var _p13 = _p12;
+      var _p14 = _p11;
+      var _p16 = _p14.player2;
+      var _p15 = _p14.player1;
+      var scores = A2(txt,$Text.height(50),A2($Basics._op["++"],$Basics.toString(_p15.score),A2($Basics._op["++"],"  ",$Basics.toString(_p16.score))));
+      return A4($Graphics$Element.container,
+      _p13._0,
+      _p13._1,
+      $Graphics$Element.middle,
+      A3($Graphics$Collage.collage,
+      gameWidth,
+      gameHeight,
+      _U.list([A2($Graphics$Collage.filled,pongGreen,A2($Graphics$Collage.rect,gameWidth,gameHeight))
+              ,A2(displayObj,_p14.ball,A2($Graphics$Collage.oval,15,15))
+              ,A2(displayObj,_p15,A2($Graphics$Collage.rect,10,40))
+              ,A2(displayObj,_p16,A2($Graphics$Collage.rect,10,40))
+              ,A2($Graphics$Collage.move,{ctor: "_Tuple2",_0: 0,_1: gameHeight / 2 - 40},$Graphics$Collage.toForm(scores))
+              ,A2($Graphics$Collage.move,
+              {ctor: "_Tuple2",_0: 0,_1: 40 - gameHeight / 2},
+              $Graphics$Collage.toForm(_U.eq(_p14.state,Play) ? A2($Graphics$Element.spacer,1,1) : A2(txt,$Basics.identity,msg)))])));
+   });
    var delta = A2($Signal.map,$Time.inSeconds,$Time.fps(35));
    var Input = F4(function (a,b,c,d) {    return {space: a,paddle1: b,paddle2: c,delta: d};});
-   return _elm.Pong.values = {_op: _op,Input: Input,delta: delta};
+   var input = A2($Signal.sampleOn,
+   delta,
+   A5($Signal.map4,
+   Input,
+   $Keyboard.space,
+   A2($Signal.map,function (_) {    return _.y;},$Keyboard.wasd),
+   A2($Signal.map,function (_) {    return _.y;},$Keyboard.arrows),
+   delta));
+   var gameState = A3($Signal.foldp,stepGame,defaultGame,input);
+   var main = A3($Signal.map2,display,$Window.dimensions,gameState);
+   return _elm.Pong.values = {_op: _op
+                             ,Input: Input
+                             ,delta: delta
+                             ,input: input
+                             ,gameHeight: gameHeight
+                             ,gameWidth: gameWidth
+                             ,halfHeight: halfHeight
+                             ,halfWidth: halfWidth
+                             ,Play: Play
+                             ,Pause: Pause
+                             ,Game: Game
+                             ,player: player
+                             ,defaultGame: defaultGame
+                             ,near: near
+                             ,within: within
+                             ,stepV: stepV
+                             ,stepObj: stepObj
+                             ,stepBall: stepBall
+                             ,stepPlyr: stepPlyr
+                             ,stepGame: stepGame
+                             ,gameState: gameState
+                             ,pongGreen: pongGreen
+                             ,textGreen: textGreen
+                             ,txt: txt
+                             ,msg: msg
+                             ,displayObj: displayObj
+                             ,display: display
+                             ,main: main};
 };
