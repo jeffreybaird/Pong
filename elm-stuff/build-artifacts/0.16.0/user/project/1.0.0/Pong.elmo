@@ -1,0 +1,18 @@
+Elm.Pong = Elm.Pong || {};
+Elm.Pong.make = function (_elm) {
+   "use strict";
+   _elm.Pong = _elm.Pong || {};
+   if (_elm.Pong.values) return _elm.Pong.values;
+   var _U = Elm.Native.Utils.make(_elm),
+   $Basics = Elm.Basics.make(_elm),
+   $Debug = Elm.Debug.make(_elm),
+   $List = Elm.List.make(_elm),
+   $Maybe = Elm.Maybe.make(_elm),
+   $Result = Elm.Result.make(_elm),
+   $Signal = Elm.Signal.make(_elm),
+   $Time = Elm.Time.make(_elm);
+   var _op = {};
+   var delta = A2($Signal.map,$Time.inSeconds,$Time.fps(35));
+   var Input = F4(function (a,b,c,d) {    return {space: a,paddle1: b,paddle2: c,delta: d};});
+   return _elm.Pong.values = {_op: _op,Input: Input,delta: delta};
+};

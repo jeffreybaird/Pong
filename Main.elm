@@ -1,7 +1,7 @@
 
 module Main where
--- Test
-import Window
+
+-- import Window
 import Time
 import Graphics.Element exposing (show)
 import Keyboard
@@ -13,7 +13,6 @@ Task: Redefine `UserInput` to include all of the information you need.
       input as described by `UserInput`.
 ------------------------------------------------------------------------------}
 
-type alias UserInput = {}
 
 
 type alias Input =
@@ -86,7 +85,7 @@ Task: redefine `stepGame` to use the UserInput and Game
 ------------------------------------------------------------------------------}
 
 stepGame : Input -> Game -> Game
-stepGame {timeDelta,userInput} gameState = gameState
+stepGame {timeDelta,{}} gameState = gameState
 
 
 
