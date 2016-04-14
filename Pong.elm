@@ -93,7 +93,6 @@ near object1 distance object2 =
   object2 >= object1 - distance && object2 <= object1 + distance
 
 -- Is the ball within the paddle?
--- Hey Jeff, come back and play with these numbers
 
 within : Ball -> Player -> Bool
 within ball player =
